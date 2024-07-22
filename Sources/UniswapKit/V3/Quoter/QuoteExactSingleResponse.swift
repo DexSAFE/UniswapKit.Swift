@@ -1,5 +1,5 @@
-import BigInt
 import Foundation
+import BigInt
 
 class QuoteExactSingleResponse {
     let amount: BigUInt
@@ -12,9 +12,10 @@ class QuoteExactSingleResponse {
             return nil
         }
 
-        amount = BigUInt(data[0 ..< 32])
-        sqrtPriceX96After = BigUInt(data[32 ..< 64])
-        initializedTicksCrossed = BigUInt(data[64 ..< 96])
-        gasEstimate = BigUInt(data[96 ..< 128])
+        amount = BigUInt(data[0..<32])
+        sqrtPriceX96After = BigUInt(data[32..<64])
+        initializedTicksCrossed = BigUInt(data[64..<96])
+        gasEstimate = BigUInt(data[96..<128])
     }
+
 }

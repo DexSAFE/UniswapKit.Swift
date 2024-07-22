@@ -1,5 +1,5 @@
-import EvmKit
 import Foundation
+import EvmKit
 
 class SwapV3MethodDecorator {
     private let contractMethodFactories: SwapV3ContractMethodFactories
@@ -7,10 +7,13 @@ class SwapV3MethodDecorator {
     init(contractMethodFactories: SwapV3ContractMethodFactories) {
         self.contractMethodFactories = contractMethodFactories
     }
+
 }
 
 extension SwapV3MethodDecorator: IMethodDecorator {
+
     public func contractMethod(input: Data) -> ContractMethod? {
         contractMethodFactories.createMethod(input: input)
     }
+
 }

@@ -1,6 +1,6 @@
-import BigInt
-import EvmKit
 import Foundation
+import EvmKit
+import BigInt
 
 class QuoteExactInputSingleMethodV1: ContractMethod {
     static let methodSignature = "quoteExactInputSingle(address,address,uint24,uint256,uint160)"
@@ -26,4 +26,5 @@ class QuoteExactInputSingleMethodV1: ContractMethod {
     override var arguments: [Any] {
         [tokenIn, tokenOut, fee, amountIn, sqrtPriceLimitX96]
     }
+
 }

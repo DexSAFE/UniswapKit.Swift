@@ -1,5 +1,5 @@
-import BigInt
 import EvmKit
+import BigInt
 
 class SwapExactTokensForTokensMethod: ContractMethod {
     static func methodSignature(supportingFeeOnTransfer: Bool) -> String {
@@ -33,4 +33,5 @@ class SwapExactTokensForTokensMethod: ContractMethod {
     override var arguments: [Any] {
         [amountIn, amountOutMin, path, to, deadline]
     }
+
 }

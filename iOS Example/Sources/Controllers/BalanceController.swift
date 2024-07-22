@@ -1,7 +1,7 @@
 import Combine
-import EvmKit
-import SnapKit
 import UIKit
+import SnapKit
+import EvmKit
 
 class BalanceController: UIViewController {
     private let adapter: EthereumAdapter = Manager.shared.adapter
@@ -49,11 +49,11 @@ class BalanceController: UIViewController {
         errorsLabel.font = .systemFont(ofSize: 12)
         errorsLabel.textColor = .red
         Publishers.MergeMany(adapter.lastBlockHeightPublisher, adapter.syncStatePublisher, adapter.transactionsSyncStatePublisher, adapter.balancePublisher)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                self?.sync()
-            }
-            .store(in: &cancellables)
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] in
+                    self?.sync()
+                }
+                .store(in: &cancellables)
 
         sync()
     }
@@ -81,13 +81,13 @@ class BalanceController: UIViewController {
         switch adapter.syncState {
         case .synced:
             syncStateString = "Synced!"
-        case let .syncing(progress):
-            if let progress {
+        case .syncing(let progress):
+            if let progress = progress {
                 syncStateString = "Syncing \(Int(progress * 100)) %"
             } else {
                 syncStateString = "Syncing"
             }
-        case let .notSynced(error):
+        case .notSynced(let error):
             syncStateString = "Not Synced"
             errorTexts.append("Sync Error: \(error)")
         }
@@ -95,13 +95,13 @@ class BalanceController: UIViewController {
         switch adapter.transactionsSyncState {
         case .synced:
             txSyncStateString = "Synced!"
-        case let .syncing(progress):
-            if let progress {
+        case .syncing(let progress):
+            if let progress = progress {
                 txSyncStateString = "Syncing \(Int(progress * 100)) %"
             } else {
                 txSyncStateString = "Syncing"
             }
-        case let .notSynced(error):
+        case .notSynced(let error):
             txSyncStateString = "Not Synced"
             errorTexts.append("Tx Sync Error: \(error)")
         }
@@ -109,17 +109,18 @@ class BalanceController: UIViewController {
         errorsLabel.text = errorTexts.joined(separator: "\n\n")
 
         titlesLabel.set(string: """
-        Sync state:
-        Tx Sync state:
-        Last block height:
-        Balance:
-        """, alignment: .left)
+                    Sync state:
+                    Tx Sync state:
+                    Last block height:
+                    Balance:
+                    """, alignment: .left)
 
         valuesLabel.set(string: """
-        \(syncStateString)
-        \(txSyncStateString)
-        \(adapter.lastBlockHeight.map { "# \($0)" } ?? "n/a")
-        \(adapter.balance) \(adapter.coin)
-        """, alignment: .right)
+                    \(syncStateString)
+                    \(txSyncStateString)
+                    \(adapter.lastBlockHeight.map { "# \($0)" } ?? "n/a")
+                    \(adapter.balance) \(adapter.coin)
+                    """, alignment: .right)
     }
+
 }

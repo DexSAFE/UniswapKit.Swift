@@ -1,5 +1,5 @@
-import BigInt
 import Foundation
+import BigInt
 
 public class TradeDataV3 {
     let trade: TradeV3
@@ -19,6 +19,7 @@ public class TradeDataV3 {
         let amountOutMin = ((Fraction(numerator: 1) + options.slippageFraction).inverted * Fraction(numerator: trade.tokenAmountOut.rawAmount)).quotient
         return TokenAmount(token: trade.tokenAmountOut.token, rawAmount: amountOutMin)
     }
+
 }
 
 extension TradeDataV3 {
@@ -26,36 +27,38 @@ extension TradeDataV3 {
     var singleSwapFee: KitV3.FeeAmount { trade.swapPath.firstFeeAmount }
 }
 
-public extension TradeDataV3 {
-    var type: TradeType {
+extension TradeDataV3 {
+
+    public var type: TradeType {
         trade.type
     }
 
-    var amountIn: Decimal? {
+    public var amountIn: Decimal? {
         trade.tokenAmountIn.decimalAmount
     }
 
-    var amountOut: Decimal? {
+    public var amountOut: Decimal? {
         trade.tokenAmountOut.decimalAmount
     }
 
-    var amountInMax: Decimal? {
+    public var amountInMax: Decimal? {
         tokenAmountInMax.decimalAmount
     }
 
-    var amountOutMin: Decimal? {
+    public var amountOutMin: Decimal? {
         tokenAmountOutMin.decimalAmount
     }
 
-    var executionPrice: Decimal? {
+    public var executionPrice: Decimal? {
         trade.executionPrice.decimalValue
     }
 
-    var executionPriceInverted: Decimal? {
+    public var executionPriceInverted: Decimal? {
         trade.executionPrice.invertedPrice.decimalValue
     }
 
-    var priceImpact: Decimal? {
+    public var priceImpact: Decimal? {
         trade.priceImpact
     }
+
 }

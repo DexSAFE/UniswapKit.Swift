@@ -1,7 +1,8 @@
-import EvmKit
 import UIKit
+import EvmKit
 
 class MainController: UITabBarController {
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -29,19 +30,23 @@ class MainController: UITabBarController {
         receiveNavigation.tabBarItem.image = UIImage(named: "Receive Tab Bar Icon")
         controllers.append(receiveNavigation)
 
+
         viewControllers = controllers
     }
+
 }
 
 extension UILabel {
+
     func set(string: String, alignment: NSTextAlignment) {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 4
         paragraphStyle.alignment = alignment
 
         let attributedString = NSMutableAttributedString(string: string)
-        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value: paragraphStyle, range: NSMakeRange(0, attributedString.length))
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value:paragraphStyle, range:NSMakeRange(0, attributedString.length))
 
         attributedText = attributedString
     }
+
 }

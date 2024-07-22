@@ -1,24 +1,35 @@
+import Foundation
 import BigInt
 import EvmKit
-import Foundation
 import HsCryptoKit
-import HsToolKit
 
 class TradeManager {
-    private let networkManager: NetworkManager
+    public let routerAddress: Address
+    private let factoryAddressString: String
+    private let initCodeHashString: String
 
-    init(networkManager: NetworkManager) {
-        self.networkManager = networkManager
+    private let evmKit: EvmKit.Kit
+    private let address: Address
+
+    init(evmKit: EvmKit.Kit, address: Address) throws {
+        routerAddress = try Self.routerAddress(chain: evmKit.chain)
+        factoryAddressString = try Self.factoryAddressString(chain: evmKit.chain)
+        initCodeHashString = try Self.initCodeHashString(chain: evmKit.chain)
+
+        self.evmKit = evmKit
+        self.address = address
     }
 
-    private func buildSwapData(receiveAddress: Address, tradeData: TradeData) throws -> SwapData {
+    private func buildSwapData(tradeData: TradeData) throws -> SwapData {
         let trade = tradeData.trade
 
         let tokenIn = trade.tokenAmountIn.token
         let tokenOut = trade.tokenAmountOut.token
 
-        let path = trade.route.path.map(\.address)
-        let to = tradeData.options.recipient ?? receiveAddress
+        let path = trade.route.path.map {
+            $0.address
+        }
+        let to = tradeData.options.recipient ?? address
         let deadline = BigUInt(Date().timeIntervalSince1970 + tradeData.options.ttl)
 
         let method: ContractMethod
@@ -52,6 +63,7 @@ class TradeManager {
             }
             return SwapTokensForExactTokensMethod(amountOut: amountOut, amountInMax: amountInMax, path: path, to: to, deadline: deadline)
         }
+
     }
 
     private func buildMethodForExactIn(tokenIn: Token, tokenOut: Token, path: [Address], to: Address, deadline: BigUInt, tradeData: TradeData, trade: Trade) throws -> ContractMethod {
@@ -72,29 +84,27 @@ class TradeManager {
             return SwapExactTokensForTokensMethod(amountIn: amountIn, amountOutMin: amountOutMin, path: path, to: to, deadline: deadline, supportingFeeOnTransfer: supportingFeeOnTransfer)
         }
     }
+
 }
 
 extension TradeManager {
-    func pair(rpcSource: RpcSource, chain: Chain, tokenA: Token, tokenB: Token) async throws -> Pair {
+
+    func pair(tokenA: Token, tokenB: Token) async throws -> Pair {
         let (token0, token1) = tokenA.sortsBefore(token: tokenB) ? (tokenA, tokenB) : (tokenB, tokenA)
 
-        let pairAddress = try Pair.address(
-            token0: token0, token1: token1,
-            factoryAddressString: Self.factoryAddressString(chain: chain),
-            initCodeHashString: Self.initCodeHashString(chain: chain)
-        )
+        let pairAddress = Pair.address(token0: token0, token1: token1, factoryAddressString: factoryAddressString, initCodeHashString: initCodeHashString)
 
 //        print("PAIR ADDRESS: \(pairAddress.toHexString())")
 
-        let data = try await EvmKit.Kit.call(networkManager: networkManager, rpcSource: rpcSource, contractAddress: pairAddress, data: GetReservesMethod().encodedABI())
+        let data = try await evmKit.fetchCall(contractAddress: pairAddress, data: GetReservesMethod().encodedABI())
 //        print("DATA: \(data.toHexString())")
 
         var rawReserve0: BigUInt = 0
         var rawReserve1: BigUInt = 0
 
         if data.count == 3 * 32 {
-            rawReserve0 = BigUInt(data[0 ... 31])
-            rawReserve1 = BigUInt(data[32 ... 63])
+            rawReserve0 = BigUInt(data[0...31])
+            rawReserve1 = BigUInt(data[32...63])
         }
 
 //        print("Reserve0: \(reserve0), Reserve1: \(reserve1)")
@@ -105,18 +115,20 @@ extension TradeManager {
         return Pair(reserve0: reserve0, reserve1: reserve1)
     }
 
-    func transactionData(receiveAddress: Address, chain: Chain, tradeData: TradeData) throws -> TransactionData {
-        let swapData = try buildSwapData(receiveAddress: receiveAddress, tradeData: tradeData)
+    func transactionData(tradeData: TradeData) throws -> TransactionData {
+        let swapData = try buildSwapData(tradeData: tradeData)
 
-        return try TransactionData(
-            to: Self.routerAddress(chain: chain),
-            value: swapData.amount,
-            input: swapData.input
+        return TransactionData(
+                to: routerAddress,
+                value: swapData.amount,
+                input: swapData.input
         )
     }
+
 }
 
 extension TradeManager {
+
     private struct SwapData {
         let amount: BigUInt
         let input: Data
@@ -127,11 +139,13 @@ extension TradeManager {
         case noFactoryAddress
         case noInitCodeHash
     }
+
 }
 
 extension TradeManager {
+
     static func tradesExactIn(pairs: [Pair], tokenAmountIn: TokenAmount, tokenOut: Token, maxHops: Int = 3, currentPairs: [Pair] = [], originalTokenAmountIn: TokenAmount? = nil) throws -> [Trade] {
-        // TODO: guards
+        // todo: guards
 
         var trades = [Trade]()
         let originalTokenAmountIn = originalTokenAmountIn ?? tokenAmountIn
@@ -146,24 +160,24 @@ extension TradeManager {
             }
 
             if tokenAmountOut.token == tokenOut {
-                let trade = try Trade(
-                    type: .exactIn,
-                    route: Route(pairs: currentPairs + [pair], tokenIn: originalTokenAmountIn.token, tokenOut: tokenOut),
-                    tokenAmountIn: originalTokenAmountIn,
-                    tokenAmountOut: tokenAmountOut
+                let trade = Trade(
+                        type: .exactIn,
+                        route: try Route(pairs: currentPairs + [pair], tokenIn: originalTokenAmountIn.token, tokenOut: tokenOut),
+                        tokenAmountIn: originalTokenAmountIn,
+                        tokenAmountOut: tokenAmountOut
                 )
 
                 trades.append(trade)
-            } else if maxHops > 1, pairs.count > 1 {
-                let pairsExcludingThisPair = Array(pairs[0 ..< index] + pairs[(index + 1) ..< pairs.count])
+            } else if maxHops > 1 && pairs.count > 1 {
+                let pairsExcludingThisPair = Array(pairs[0..<index] + pairs[(index + 1)..<pairs.count])
 
                 let recursiveTrades = try TradeManager.tradesExactIn(
-                    pairs: pairsExcludingThisPair,
-                    tokenAmountIn: tokenAmountOut,
-                    tokenOut: tokenOut,
-                    maxHops: maxHops - 1,
-                    currentPairs: currentPairs + [pair],
-                    originalTokenAmountIn: originalTokenAmountIn
+                        pairs: pairsExcludingThisPair,
+                        tokenAmountIn: tokenAmountOut,
+                        tokenOut: tokenOut,
+                        maxHops: maxHops - 1,
+                        currentPairs: currentPairs + [pair],
+                        originalTokenAmountIn: originalTokenAmountIn
                 )
 
                 trades.append(contentsOf: recursiveTrades)
@@ -174,7 +188,7 @@ extension TradeManager {
     }
 
     static func tradesExactOut(pairs: [Pair], tokenIn: Token, tokenAmountOut: TokenAmount, maxHops: Int = 3, currentPairs: [Pair] = [], originalTokenAmountOut: TokenAmount? = nil) throws -> [Trade] {
-        // TODO: guards
+        // todo: guards
 
         var trades = [Trade]()
         let originalTokenAmountOut = originalTokenAmountOut ?? tokenAmountOut
@@ -189,24 +203,24 @@ extension TradeManager {
             }
 
             if tokenAmountIn.token == tokenIn {
-                let trade = try Trade(
-                    type: .exactOut,
-                    route: Route(pairs: [pair] + currentPairs, tokenIn: tokenIn, tokenOut: originalTokenAmountOut.token),
-                    tokenAmountIn: tokenAmountIn,
-                    tokenAmountOut: originalTokenAmountOut
+                let trade = Trade(
+                        type: .exactOut,
+                        route: try Route(pairs: [pair] + currentPairs, tokenIn: tokenIn, tokenOut: originalTokenAmountOut.token),
+                        tokenAmountIn: tokenAmountIn,
+                        tokenAmountOut: originalTokenAmountOut
                 )
 
                 trades.append(trade)
-            } else if maxHops > 1, pairs.count > 1 {
-                let pairsExcludingThisPair = Array(pairs[0 ..< index] + pairs[(index + 1) ..< pairs.count])
+            } else if maxHops > 1 && pairs.count > 1 {
+                let pairsExcludingThisPair = Array(pairs[0..<index] + pairs[(index + 1)..<pairs.count])
 
                 let recursiveTrades = try TradeManager.tradesExactOut(
-                    pairs: pairsExcludingThisPair,
-                    tokenIn: tokenIn,
-                    tokenAmountOut: tokenAmountIn,
-                    maxHops: maxHops - 1,
-                    currentPairs: [pair] + currentPairs,
-                    originalTokenAmountOut: originalTokenAmountOut
+                        pairs: pairsExcludingThisPair,
+                        tokenIn: tokenIn,
+                        tokenAmountOut: tokenAmountIn,
+                        maxHops: maxHops - 1,
+                        currentPairs: [pair] + currentPairs,
+                        originalTokenAmountOut: originalTokenAmountOut
                 )
 
                 trades.append(contentsOf: recursiveTrades)
@@ -216,7 +230,7 @@ extension TradeManager {
         return trades
     }
 
-    static func routerAddress(chain: Chain) throws -> Address {
+    private static func routerAddress(chain: Chain) throws -> Address {
         switch chain {
         case .ethereum, .ethereumRopsten, .ethereumRinkeby, .ethereumKovan, .ethereumGoerli: return try Address(hex: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
         case .binanceSmartChain: return try Address(hex: "0x10ED43C718714eb63d5aA57B78B54704E256024E")
@@ -245,4 +259,5 @@ extension TradeManager {
         default: throw UnsupportedChainError.noInitCodeHash
         }
     }
+
 }

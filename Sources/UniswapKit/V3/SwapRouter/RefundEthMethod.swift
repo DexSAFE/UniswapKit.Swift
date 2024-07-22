@@ -1,5 +1,5 @@
-import EvmKit
 import Foundation
+import EvmKit
 
 class RefundEthMethod: ContractMethod {
     static let methodSignature = "refundETH()"
@@ -9,4 +9,5 @@ class RefundEthMethod: ContractMethod {
     override var arguments: [Any] {
         []
     }
+
 }

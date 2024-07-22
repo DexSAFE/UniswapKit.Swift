@@ -1,16 +1,24 @@
 import EvmKit
 
 class TokenFactory {
-    func etherToken(chain: Chain) throws -> Token {
-        try .eth(wethAddress: Self.wethAddress(chain: chain))
+    private let wethAddress: Address
+
+    init(chain: Chain) throws {
+        wethAddress = try TokenFactory.wethAddress(chain: chain)
+    }
+
+    var etherToken: Token {
+        .eth(wethAddress: wethAddress)
     }
 
     func token(contractAddress: Address, decimals: Int) -> Token {
         .erc20(address: contractAddress, decimals: decimals)
     }
+
 }
 
 extension TokenFactory {
+
     private static func wethAddress(chain: Chain) throws -> Address {
         let wethAddressHex: String
 
@@ -33,4 +41,5 @@ extension TokenFactory {
     enum UnsupportedChainError: Error {
         case noWethAddress
     }
+
 }

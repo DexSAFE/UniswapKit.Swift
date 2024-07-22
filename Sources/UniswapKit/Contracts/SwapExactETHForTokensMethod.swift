@@ -1,5 +1,5 @@
-import BigInt
 import EvmKit
+import BigInt
 
 class SwapExactETHForTokensMethod: ContractMethod {
     static func methodSignature(supportingFeeOnTransfer: Bool) -> String {
@@ -15,7 +15,7 @@ class SwapExactETHForTokensMethod: ContractMethod {
     private let supportingFeeOnTransfer: Bool
 
     init(amountOut: BigUInt, path: [Address], to: Address, deadline: BigUInt, supportingFeeOnTransfer: Bool = false) {
-        amountOutMin = amountOut
+        self.amountOutMin = amountOut
         self.path = path
         self.to = to
         self.deadline = deadline
@@ -31,4 +31,5 @@ class SwapExactETHForTokensMethod: ContractMethod {
     override var arguments: [Any] {
         [amountOutMin, path, to, deadline]
     }
+
 }

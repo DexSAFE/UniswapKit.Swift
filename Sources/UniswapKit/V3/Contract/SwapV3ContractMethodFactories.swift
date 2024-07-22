@@ -16,4 +16,5 @@ class SwapV3ContractMethodFactories: ContractMethodFactories {
             MulticallMethodFactory(),
         ])
     }
+
 }

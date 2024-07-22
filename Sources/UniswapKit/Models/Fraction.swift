@@ -1,5 +1,5 @@
-import BigInt
 import Foundation
+import BigInt
 
 struct Fraction {
     let numerator: BigUInt
@@ -21,10 +21,10 @@ struct Fraction {
 
         if decimal.exponent > 0 {
             self.numerator = numerator * BigUInt(10).power(decimal.exponent)
-            denominator = 1
+            self.denominator = 1
         } else {
             self.numerator = numerator
-            denominator = BigUInt(10).power(-decimal.exponent)
+            self.denominator = BigUInt(10).power(-decimal.exponent)
         }
     }
 
@@ -46,68 +46,75 @@ struct Fraction {
 
         return Decimal(sign: .plus, exponent: -decimals, significand: significand)
     }
+
 }
 
 extension Fraction {
-    public static func + (lhs: Fraction, rhs: Fraction) -> Fraction {
+
+    public static func +(lhs: Fraction, rhs: Fraction) -> Fraction {
         if lhs.denominator == rhs.denominator {
             return Fraction(numerator: lhs.numerator + rhs.numerator, denominator: lhs.denominator)
         }
 
         return Fraction(
-            numerator: lhs.numerator * rhs.denominator + rhs.numerator * lhs.denominator,
-            denominator: lhs.denominator * rhs.denominator
+                numerator: lhs.numerator * rhs.denominator + rhs.numerator * lhs.denominator,
+                denominator: lhs.denominator * rhs.denominator
         )
     }
 
-    public static func - (lhs: Fraction, rhs: Fraction) -> Fraction {
+    public static func -(lhs: Fraction, rhs: Fraction) -> Fraction {
         if lhs.denominator == rhs.denominator {
             return Fraction(numerator: lhs.numerator - rhs.numerator, denominator: lhs.denominator)
         }
 
         return Fraction(
-            numerator: lhs.numerator * rhs.denominator - rhs.numerator * lhs.denominator,
-            denominator: lhs.denominator * rhs.denominator
+                numerator: lhs.numerator * rhs.denominator - rhs.numerator * lhs.denominator,
+                denominator: lhs.denominator * rhs.denominator
         )
     }
 
-    public static func * (lhs: Fraction, rhs: Fraction) -> Fraction {
+    public static func *(lhs: Fraction, rhs: Fraction) -> Fraction {
         Fraction(
-            numerator: lhs.numerator * rhs.numerator,
-            denominator: lhs.denominator * rhs.denominator
+                numerator: lhs.numerator * rhs.numerator,
+                denominator: lhs.denominator * rhs.denominator
         )
     }
 
-    public static func * (lhs: Fraction, rhs: BigInt) -> Fraction {
+    public static func *(lhs: Fraction, rhs: BigInt) -> Fraction {
         let uint = BigUInt(abs(rhs))
         let positive = rhs >= 0
 
         return Fraction(
-            numerator: lhs.numerator * (positive ? uint : 1),
-            denominator: lhs.denominator * (positive ? 1 : uint)
+                numerator: lhs.numerator * (positive ? uint : 1),
+                denominator: lhs.denominator * (positive ? 1 : uint)
         )
     }
 
-    public static func / (lhs: Fraction, rhs: Fraction) -> Fraction {
+    public static func /(lhs: Fraction, rhs: Fraction) -> Fraction {
         Fraction(
-            numerator: lhs.numerator * rhs.denominator,
-            denominator: lhs.denominator * rhs.numerator
+                numerator: lhs.numerator * rhs.denominator,
+                denominator: lhs.denominator * rhs.numerator
         )
     }
+
 }
 
 extension Fraction: Comparable {
-    public static func < (lhs: Fraction, rhs: Fraction) -> Bool {
+
+    public static func <(lhs: Fraction, rhs: Fraction) -> Bool {
         lhs.numerator * rhs.denominator < rhs.numerator * lhs.denominator
     }
 
-    public static func == (lhs: Fraction, rhs: Fraction) -> Bool {
+    public static func ==(lhs: Fraction, rhs: Fraction) -> Bool {
         lhs.numerator * rhs.denominator == rhs.numerator * lhs.denominator
     }
+
 }
 
 extension Fraction: CustomStringConvertible {
+
     public var description: String {
         "\(numerator) / \(denominator)"
     }
+
 }

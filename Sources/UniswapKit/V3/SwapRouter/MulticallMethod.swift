@@ -1,5 +1,5 @@
-import EvmKit
 import Foundation
+import EvmKit
 
 class MulticallMethod: ContractMethod {
     static let methodSignature = "multicall(bytes[])"
@@ -16,4 +16,5 @@ class MulticallMethod: ContractMethod {
     override var arguments: [Any] {
         [ContractMethodHelper.MulticallParameters(methods.map { $0.encodedABI() })]
     }
+
 }

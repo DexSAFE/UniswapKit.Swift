@@ -1,6 +1,6 @@
-import BigInt
-import EvmKit
 import Foundation
+import EvmKit
+import BigInt
 
 class Slot0Method: ContractMethod {
     static let methodSignature = "slot0()"
@@ -10,4 +10,5 @@ class Slot0Method: ContractMethod {
     override var arguments: [Any] {
         []
     }
+
 }

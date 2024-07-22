@@ -1,10 +1,10 @@
-import BigInt
-import EvmKit
 import Foundation
+import EvmKit
+import BigInt
 
-import BigInt
-import EvmKit
 import Foundation
+import EvmKit
+import BigInt
 
 class UnwrapWeth9MethodFactory: IContractMethodFactory {
     let methodId: Data = ContractMethodHelper.methodId(signature: UnwrapWeth9Method.methodSignature)
@@ -21,8 +21,9 @@ class UnwrapWeth9MethodFactory: IContractMethodFactory {
         }
 
         return UnwrapWeth9Method(
-            amountMinimum: amountMinimum,
-            recipient: recipient
+                amountMinimum: amountMinimum,
+                recipient: recipient
         )
     }
+
 }

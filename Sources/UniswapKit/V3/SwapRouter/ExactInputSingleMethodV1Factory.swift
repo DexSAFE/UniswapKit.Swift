@@ -1,10 +1,10 @@
-import BigInt
-import EvmKit
 import Foundation
+import EvmKit
+import BigInt
 
-import BigInt
-import EvmKit
 import Foundation
+import EvmKit
+import BigInt
 
 class ExactInputSingleMethodV1Factory: IContractMethodFactory {
     let methodId: Data = ContractMethodHelper.methodId(signature: ExactInputSingleMethodV1.methodSignature)
@@ -33,14 +33,15 @@ class ExactInputSingleMethodV1Factory: IContractMethodFactory {
         }
 
         return ExactInputSingleMethodV1(
-            tokenIn: tokenIn,
-            tokenOut: tokenOut,
-            fee: fee,
-            recipient: recipient,
-            deadline: deadline,
-            amountIn: amountIn,
-            amountOutMinimum: amountOutMinimum,
-            sqrtPriceLimitX96: sqrtPriceLimitX96
+                tokenIn: tokenIn,
+                tokenOut: tokenOut,
+                fee: fee,
+                recipient: recipient,
+                deadline: deadline,
+                amountIn: amountIn,
+                amountOutMinimum: amountOutMinimum,
+                sqrtPriceLimitX96: sqrtPriceLimitX96
         )
     }
+
 }
